@@ -16,15 +16,6 @@ use Stfalcon\Bundle\BlogBundle\Entity\Post;
 class PostController extends AbstractController
 {
 
-    private function _getRequestArrayWithDisqusShortname($array)
-    {
-        $config = $this->container->getParameter('stfalcon_blog.config');
-        return array_merge(
-            $array,
-            array('disqus_shortname' => $config['disqus_shortname'])
-        );
-    }
-
     /**
      * List of posts for admin
      *
@@ -37,7 +28,7 @@ class PostController extends AbstractController
      *
      * @return array
      */
-    public function indexAction($page)
+    public function indexAction(int $page): array
     {
         $allPosts = $this->get('doctrine')->getEntityManager()
                 ->getRepository("StfalconBlogBundle:Post")->getAllPosts();
@@ -48,9 +39,9 @@ class PostController extends AbstractController
             $breadcrumbs->addChild('Блог')->setCurrent(true);
         }
 
-        return $this->_getRequestArrayWithDisqusShortname(array(
+        return $this->_getRequestDataWithDisqusShortname([
             'posts' => $posts
-        ));
+        ]);
     }
 
     /**
@@ -63,7 +54,7 @@ class PostController extends AbstractController
      *
      * @return array
      */
-    public function viewAction(Post $post)
+    public function viewAction(Post $post): array
     {
         if ($this->has('application_default.menu.breadcrumbs')) {
             $breadcrumbs = $this->get('application_default.menu.breadcrumbs');
@@ -71,9 +62,9 @@ class PostController extends AbstractController
             $breadcrumbs->addChild($post->getTitle())->setCurrent(true);
         }
 
-        return $this->_getRequestArrayWithDisqusShortname(array(
+        return $this->_getRequestDataWithDisqusShortname([
             'post' => $post
-        ));
+        ]);
     }
 
     /**
@@ -91,14 +82,14 @@ class PostController extends AbstractController
 
         $feed->setTitle($config['rss']['title']);
         $feed->setDescription($config['rss']['description']);
-        $feed->setLink($this->generateUrl('blog_rss', array(), true));
+        $feed->setLink($this->generateUrl('blog_rss', [], true));
 
         $posts = $this->get('doctrine')->getEntityManager()
                 ->getRepository("StfalconBlogBundle:Post")->getAllPosts();
         foreach ($posts as $post) {
             $entry = new \Zend\Feed\Writer\Entry();
             $entry->setTitle($post->getTitle());
-            $entry->setLink($this->generateUrl('blog_post_view', array('slug' => $post->getSlug()), true));
+            $entry->setLink($this->generateUrl('blog_post_view', ['slug' => $post->getSlug()], true));
 
             $feed->addEntry($entry);
         }
@@ -115,11 +106,11 @@ class PostController extends AbstractController
      *
      * @return array()
      */
-    public function lastAction($count = 1)
+    public function lastAction(int $count = 1): array
     {
         $posts = $this->get('doctrine')->getEntityManager()
                 ->getRepository("StfalconBlogBundle:Post")->getLastPosts($count);
 
-        return array('posts' => $posts);
+        return ['posts' => $posts];
     }
 }
